@@ -1,100 +1,73 @@
+import { createLocalApi, browserStorage, normalize } from './localApi.js';
+
 const $ = (sel) => document.querySelector(sel);
 const state = { courses: [], tasks: [], summary: null, settings: { scale: 5 }, editing: null };
 const GRADE_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
+const storage = browserStorage();
+const local = createLocalApi(storage.storage);
+
+// Same call shape as when there was a server, but everything runs in this browser.
 async function api(path, options = {}) {
-  const res = await fetch(`/api${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
-  if (res.status === 204) return null;
-  const data = await res.json();
-  if (res.status === 401 && !path.startsWith('/auth/')) showAuth();
-  if (!res.ok) throw new Error(data.errors?.join(', ') || 'Request failed');
-  return data;
+  return local.request(options.method ?? 'GET', path, options.body);
 }
 
-// ---- Accounts ----
+// ---- Backup: export to a file, import from a file ----
 
-let authMode = 'login';
-
-function setAuthMode(mode) {
-  authMode = mode;
-  const signup = mode === 'signup';
-  $('#auth-title').textContent = signup ? 'Create your account' : 'Log in';
-  $('#auth-intro').textContent = signup
-    ? 'Track your courses, CGPA and deadlines. Your data is private to your account.'
-    : 'Welcome back. Log in to see your courses and deadlines.';
-  $('#auth-submit').textContent = signup ? 'Create account' : 'Log in';
-  $('#auth-switch-text').textContent = signup ? 'Already have an account?' : 'New to StudyDesk?';
-  $('#auth-switch').textContent = signup ? 'Log in' : 'Create an account';
-  $('#auth-form').password.autocomplete = signup ? 'new-password' : 'current-password';
-  $('#auth-error').hidden = true;
+function exportBackup() {
+  const backup = local.exportData();
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const a = h('a', { href: URL.createObjectURL(blob), download: `studydesk-backup-${backup.exportedAt.slice(0, 10)}.json` });
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  showNotice('Backup downloaded. Import it on any device to restore your data.');
 }
 
-function showAuth() {
-  $('#app').hidden = true;
-  $('#account').hidden = true;
-  $('#auth').hidden = false;
-  $('#auth-form').email.focus();
-}
-
-function showApp(user) {
-  $('#auth').hidden = true;
-  $('#app').hidden = false;
-  $('#account').hidden = false;
-  $('#user-email').textContent = user.email;
-}
-
-$('#auth-switch').addEventListener('click', () => setAuthMode(authMode === 'login' ? 'signup' : 'login'));
-
-$('#auth-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const form = e.target;
-  const button = $('#auth-submit');
-  button.disabled = true;
+async function importBackup(file) {
   try {
-    const { user } = await api(`/auth/${authMode}`, {
-      method: 'POST', body: { email: form.email.value, password: form.password.value },
-    });
-    form.reset();
-    showApp(user);
-    await load();
-  } catch (err) {
-    const msg = err.message;
-    $('#auth-error').textContent = msg.charAt(0).toUpperCase() + msg.slice(1) + '.';
-    $('#auth-error').hidden = false;
-  } finally {
-    button.disabled = false;
-  }
-});
-
-$('#logout').addEventListener('click', async () => {
-  await api('/auth/logout', { method: 'POST' }).catch(() => {});
-  Object.assign(state, { courses: [], tasks: [], summary: null, editing: null });
-  $('#target-form').reset();
-  $('#target-result').replaceChildren(h('p', { className: 'empty' }, 'Enter the CGPA you\'re aiming for to see the grades you need.'));
-  setAuthMode('login');
-  showAuth();
-});
-
-async function start() {
-  try {
-    const { user } = await api('/auth/me');
-    showApp(user);
-    await load();
-  } catch (err) {
-    showAuth();
-    if (err.message !== 'please log in') {
-      $('#auth-error').textContent = err.message;
-      $('#auth-error').hidden = false;
+    let raw;
+    try {
+      raw = JSON.parse(await file.text());
+    } catch {
+      throw new Error("this file isn't a StudyDesk backup");
     }
+    normalize(raw); // check the file before asking to replace anything
+    const have = state.courses.length + state.tasks.length;
+    if (have && !confirm('Importing replaces all the courses and tasks in this browser with the ones in the file. Continue?')) return;
+    const r = local.importData(raw);
+    state.editing = null;
+    await load();
+    showNotice(`Imported ${r.courses} course${r.courses === 1 ? '' : 's'} and ${r.tasks} task${r.tasks === 1 ? '' : 's'}`
+      + (r.skipped ? ` (${r.skipped} invalid item${r.skipped === 1 ? '' : 's'} skipped).` : '.'));
+  } catch (err) {
+    showError(err.message);
   }
 }
 
-function showError(message) {
+$('#export').addEventListener('click', exportBackup);
+$('#import').addEventListener('click', () => $('#import-file').click());
+$('#import-file').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  e.target.value = ''; // allow importing the same file again later
+  if (file) importBackup(file);
+});
+
+function start() {
+  if (!storage.persistent) {
+    $('#storage-warning').hidden = false;
+  }
+  load().catch((err) => showError(err.message));
+}
+
+function showNotice(message) {
+  showError(message, 'notice');
+}
+
+function showError(message, kind = 'error') {
   const el = $('#error');
+  el.className = kind;
   el.textContent = message;
   el.hidden = false;
   clearTimeout(showError.timer);

@@ -1,23 +1,16 @@
 {
   "name": "studydesk",
   "version": "1.0.0",
-  "description": "Student planner: courses, GPA (5.0/4.0 scale) and deadlines",
-  "main": "src/server.js",
+  "description": "Student planner: courses, GPA (5.0/4.0 scale), target CGPA and deadlines. Runs entirely in the browser.",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
+    "start": "node scripts/dev-server.js",
     "test": "node --test"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "@electric-sql/pglite": "^0.5.17",
-    "express": "^4.22.3",
-    "pg": "^8.23.1"
-  },
   "type": "module"
 }

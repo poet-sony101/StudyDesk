@@ -9,42 +9,31 @@
 <body>
   <header>
     <h1>StudyDesk</h1>
-    <div id="account" class="account" hidden>
+    <div class="toolbar">
       <label class="scale">Scale
         <select id="scale">
           <option value="5">5.0</option>
           <option value="4">4.0</option>
         </select>
       </label>
-      <span id="user-email" class="email"></span>
-      <button id="logout" type="button" class="secondary">Log out</button>
+      <button id="export" type="button" class="secondary" title="Download a backup file of all your data">Export</button>
+      <button id="import" type="button" class="secondary" title="Load data from a backup file">Import</button>
+      <input id="import-file" type="file" accept=".json,application/json" hidden>
     </div>
   </header>
 
-  <section id="auth" class="auth" hidden>
-    <form id="auth-form" class="panel">
-      <h2 id="auth-title">Log in</h2>
-      <p class="muted" id="auth-intro">Welcome back. Log in to see your courses and deadlines.</p>
-      <label>Email
-        <input name="email" type="email" autocomplete="email" required>
-      </label>
-      <label>Password
-        <input name="password" type="password" autocomplete="current-password" required minlength="8">
-      </label>
-      <p id="auth-error" class="result bad" role="alert" hidden></p>
-      <button id="auth-submit">Log in</button>
-      <p class="muted switch"><span id="auth-switch-text">New to StudyDesk?</span>
-        <button type="button" id="auth-switch" class="link plain">Create an account</button></p>
-    </form>
-  </section>
+  <p id="storage-warning" class="banner" role="status" hidden>
+    This browser isn't letting StudyDesk save data (private browsing can do this), so anything you add will be lost when you close the tab. Use <strong>Export</strong> to keep a copy.
+  </p>
 
-  <main id="app" hidden>
+  <main id="app">
     <section class="summary" aria-live="polite">
       <div class="stat"><span class="label">CGPA</span><span id="gpa" class="value">0.00</span></div>
       <div class="stat"><span class="label">Class</span><span id="class" class="value small">—</span></div>
       <div class="stat"><span class="label">Graded units</span><span id="units" class="value">0</span></div>
       <div class="stat"><span class="label">Tasks due</span><span id="due" class="value">0</span></div>
     </section>
+    <p class="privacy muted">Your data is saved only in this browser on this device. Use <strong>Export</strong> to back it up or move it to another device.</p>
 
     <section class="panel">
       <h2>Target CGPA</h2>

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { computeGpa, classify, planTarget } from '../src/gpa.js';
+import { computeGpa, classify, planTarget } from '../public/gpa.js';
 
 test('weights grades by credit units on the 5-point scale', () => {
   const r = computeGpa([{ units: 3, grade: 'A' }, { units: 2, grade: 'C' }]);
