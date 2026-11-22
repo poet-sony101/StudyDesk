@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { computeGpa, classify } from '../src/gpa.js';
+import { computeGpa, classify, planTarget } from '../src/gpa.js';
 
 test('weights grades by credit units on the 5-point scale', () => {
   const r = computeGpa([{ units: 3, grade: 'A' }, { units: 2, grade: 'C' }]);
@@ -36,4 +36,38 @@ test('classifies degree class on band boundaries', () => {
   assert.equal(classify(2.4, 5), 'Second Class Lower');
   assert.equal(classify(0.9, 5), 'Fail');
   assert.equal(classify(3.6, 4), 'First Class');
+});
+
+// 10 units at B (4.0) on the 5-point scale.
+const tenUnitsOfB = [{ units: 10, grade: 'B' }];
+
+test('planTarget finds the needed average and a grade mix that reaches it', () => {
+  const r = planTarget(tenUnitsOfB, { target: 4.5, remainingUnits: 10 });
+  assert.equal(r.status, 'possible');
+  assert.equal(r.needed, 5);
+  assert.deepEqual(r.mix, [{ grade: 'A', units: 10 }]);
+});
+
+test('planTarget mixes two adjacent grades, and the mix really reaches the target', () => {
+  const r = planTarget(tenUnitsOfB, { target: 4.2, remainingUnits: 10 });
+  assert.equal(r.needed, 4.4);
+  assert.deepEqual(r.mix, [{ grade: 'A', units: 4 }, { grade: 'B', units: 6 }]);
+  const after = computeGpa([...tenUnitsOfB, ...r.mix.map((m) => ({ units: m.units, grade: m.grade }))]);
+  assert.ok(after.gpa >= 4.2);
+});
+
+test('planTarget reports impossible targets and the best reachable CGPA', () => {
+  const r = planTarget(tenUnitsOfB, { target: 4.8, remainingUnits: 5 });
+  assert.equal(r.status, 'impossible');
+  assert.equal(r.best, 4.33);
+});
+
+test('planTarget reports targets that are already secured', () => {
+  assert.equal(planTarget(tenUnitsOfB, { target: 2, remainingUnits: 10 }).status, 'secured');
+});
+
+test('planTarget works with no graded courses and on the 4-point scale', () => {
+  const r = planTarget([], { target: 3.5, remainingUnits: 20, scale: 4 });
+  assert.equal(r.needed, 3.5);
+  assert.deepEqual(r.mix, [{ grade: 'A', units: 10 }, { grade: 'B', units: 10 }]);
 });

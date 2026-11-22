@@ -6,6 +6,8 @@ and degree class update live, and keep on top of assignments and deadlines.
 - **Courses** grouped by semester, with credit units and grades (A–F)
 - **GPA per semester and overall CGPA**, weighted by credit units, on a **5.0 or 4.0 scale**
 - **Degree class** (First Class, Second Class Upper, …) from your CGPA
+- **Target CGPA planner**: the average you need over your remaining units, a grade mix that gets you there, and the best CGPA you can still reach
+- **Edit anything** inline (✎): courses and tasks; Enter saves, Escape cancels
 - **Tasks** with due dates, optional course link, overdue / due-soon highlighting
 - Works on phones, supports dark mode
 
@@ -45,12 +47,12 @@ test/           unit tests (gpa) and API tests, using node:test
 | PATCH / DELETE | `/api/tasks/:id` | |
 | GET / PATCH | `/api/settings` | `{ scale: 4 \| 5 }` |
 | GET | `/api/summary` | `{ gpa, totalUnits, degreeClass, semesters: [...] }` |
+| GET | `/api/target?cgpa=4.5&units=18` | `units` defaults to ungraded units; returns `{ status, needed, mix, best }` |
 
 Validation errors return `400` with `{ "errors": ["..."] }`.
 
 ## Ideas for next steps
 
 - User accounts, so several students can use one server
-- A "what grade do I need?" target-CGPA calculator
 - Swap the JSON file for SQLite once data grows
 - Deploy to Render or Railway

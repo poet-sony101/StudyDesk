@@ -33,3 +33,40 @@ export function classify(gpa, scale = 5) {
   for (const [min, label] of bands) if (gpa >= min) return label;
   return 'Fail';
 }
+
+// Grade letter for a whole grade point; F is preferred over E when both are 0 (4-point scale).
+function letterFor(points, scale) {
+  const table = SCALES[scale];
+  return ['A', 'B', 'C', 'D', 'F', 'E'].find((g) => table[g] === points);
+}
+
+/**
+ * What average grade point is needed over `remainingUnits` more units to reach `target` CGPA?
+ * Returns the required average, whether it is achievable, the best possible CGPA,
+ * and a simple unit mix of two adjacent grades that reaches the target.
+ */
+export function planTarget(courses, { target, remainingUnits, scale = 5 }) {
+  const table = SCALES[scale];
+  if (!table) throw new Error(`Unsupported scale: ${scale}`);
+  const max = table.A;
+  const { gpa, totalUnits, totalPoints } = computeGpa(courses, scale);
+  const R = remainingUnits;
+
+  const needed = (target * (totalUnits + R) - totalPoints) / R;
+  const best = Math.round(((totalPoints + max * R) / (totalUnits + R)) * 100) / 100;
+  const result = { current: gpa, target, remainingUnits: R, scale, best, needed: Math.round(needed * 100) / 100 };
+
+  if (needed <= 0) return { ...result, status: 'secured', mix: [] };
+  if (needed > max + 1e-9) return { ...result, status: 'impossible', mix: [] };
+
+  // Split the units between the two grades around the needed average.
+  const low = Math.floor(needed + 1e-9);
+  const high = Math.min(low + 1, max);
+  const highUnits = low === high ? R : Math.min(R, Math.ceil((needed - low) * R - 1e-9));
+  const mix = [
+    { grade: letterFor(high, scale), units: highUnits },
+    { grade: letterFor(low, scale), units: R - highUnits },
+  ].filter((m) => m.units > 0);
+
+  return { ...result, status: 'possible', mix };
+}

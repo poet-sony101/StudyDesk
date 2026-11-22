@@ -26,6 +26,20 @@
     </section>
 
     <section class="panel">
+      <h2>Target CGPA</h2>
+      <form id="target-form" class="row">
+        <label>Target CGPA
+          <input name="cgpa" type="number" step="0.01" min="0.01" max="5" placeholder="e.g. 4.50" required>
+        </label>
+        <label>Units left
+          <input name="units" type="number" min="1" max="1000" placeholder="ungraded">
+        </label>
+        <button>Calculate</button>
+      </form>
+      <div id="target-result" aria-live="polite"><p class="empty">Enter the CGPA you're aiming for to see the grades you need. "Units left" defaults to the units of your courses that don't have a grade yet.</p></div>
+    </section>
+
+    <section class="panel">
       <h2>Courses</h2>
       <form id="course-form" class="row">
         <input name="code" placeholder="Code (e.g. CSC 201)" required maxlength="20">

@@ -77,3 +77,15 @@ test('switching scale recomputes GPA', async () => {
   assert.equal(s.scale, 4);
   assert.ok(s.gpa <= 4);
 });
+
+test('target endpoint defaults to ungraded units and validates input', async () => {
+  await call('/settings', 'PATCH', { scale: 5 });
+  const r = await call('/target?cgpa=4.5');
+  assert.equal(r.status, 200);
+  // GST 201 (2 units) from the first test is the only ungraded course left.
+  assert.equal(r.body.remainingUnits, 2);
+
+  assert.equal((await call('/target?cgpa=4.5&units=15')).body.remainingUnits, 15);
+  assert.equal((await call('/target?cgpa=6')).status, 400);
+  assert.equal((await call('/target?cgpa=4&units=0')).status, 400);
+});

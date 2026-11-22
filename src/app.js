@@ -1,6 +1,6 @@
 import express from 'express';
 import { fileURLToPath } from 'node:url';
-import { computeGpa, classify, SCALES } from './gpa.js';
+import { computeGpa, classify, planTarget, SCALES } from './gpa.js';
 import { validateCourse, validateTask } from './validate.js';
 
 const publicDir = fileURLToPath(new URL('../public', import.meta.url));
@@ -61,6 +61,22 @@ export function createApp(store) {
     const semesters = Object.entries(bySemester).map(([name, list]) => ({ name, ...computeGpa(list, scale) }));
 
     res.json({ ...overall, degreeClass: classify(overall.gpa, scale), semesters });
+  });
+
+  // Target CGPA planner. `units` defaults to the units of courses not graded yet.
+  api.get('/target', (req, res) => {
+    const { scale } = store.getSettings();
+    const courses = store.courses.list();
+    const target = Number(req.query.cgpa);
+    const units = req.query.units ? Number(req.query.units)
+      : courses.filter((c) => !c.grade).reduce((sum, c) => sum + c.units, 0);
+
+    const errors = [];
+    if (!(target > 0 && target <= scale)) errors.push(`cgpa must be above 0 and at most ${scale}`);
+    if (!Number.isInteger(units) || units < 1 || units > 1000) errors.push('remaining units must be a whole number from 1 to 1000');
+    if (errors.length) return res.status(400).json({ errors });
+
+    res.json(planTarget(courses, { target, remainingUnits: units, scale }));
   });
 
   app.use('/api', api);
