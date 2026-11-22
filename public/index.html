@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>StudyDesk</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>StudyDesk</h1>
+    <label class="scale">Scale
+      <select id="scale">
+        <option value="5">5.0</option>
+        <option value="4">4.0</option>
+      </select>
+    </label>
+  </header>
+
+  <main>
+    <section class="summary" aria-live="polite">
+      <div class="stat"><span class="label">CGPA</span><span id="gpa" class="value">0.00</span></div>
+      <div class="stat"><span class="label">Class</span><span id="class" class="value small">—</span></div>
+      <div class="stat"><span class="label">Graded units</span><span id="units" class="value">0</span></div>
+      <div class="stat"><span class="label">Tasks due</span><span id="due" class="value">0</span></div>
+    </section>
+
+    <section class="panel">
+      <h2>Courses</h2>
+      <form id="course-form" class="row">
+        <input name="code" placeholder="Code (e.g. CSC 201)" required maxlength="20">
+        <input name="title" placeholder="Title" maxlength="120">
+        <input name="units" type="number" min="0" max="12" value="3" required aria-label="Units">
+        <select name="grade" aria-label="Grade">
+          <option value="">In progress</option>
+          <option>A</option><option>B</option><option>C</option>
+          <option>D</option><option>E</option><option>F</option>
+        </select>
+        <input name="semester" placeholder="Semester (e.g. 200L First)" list="semesters">
+        <datalist id="semesters"></datalist>
+        <button>Add course</button>
+      </form>
+      <div id="courses"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Tasks &amp; deadlines</h2>
+      <form id="task-form" class="row">
+        <input name="title" placeholder="What needs doing?" required maxlength="200">
+        <input name="dueDate" type="date" aria-label="Due date">
+        <select name="courseId" id="task-course" aria-label="Course"><option value="">No course</option></select>
+        <button>Add task</button>
+      </form>
+      <ul id="tasks" class="tasks"></ul>
+    </section>
+  </main>
+
+  <p id="error" class="error" role="alert" hidden></p>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
