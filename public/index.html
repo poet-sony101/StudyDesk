@@ -9,15 +9,36 @@
 <body>
   <header>
     <h1>StudyDesk</h1>
-    <label class="scale">Scale
-      <select id="scale">
-        <option value="5">5.0</option>
-        <option value="4">4.0</option>
-      </select>
-    </label>
+    <div id="account" class="account" hidden>
+      <label class="scale">Scale
+        <select id="scale">
+          <option value="5">5.0</option>
+          <option value="4">4.0</option>
+        </select>
+      </label>
+      <span id="user-email" class="email"></span>
+      <button id="logout" type="button" class="secondary">Log out</button>
+    </div>
   </header>
 
-  <main>
+  <section id="auth" class="auth" hidden>
+    <form id="auth-form" class="panel">
+      <h2 id="auth-title">Log in</h2>
+      <p class="muted" id="auth-intro">Welcome back. Log in to see your courses and deadlines.</p>
+      <label>Email
+        <input name="email" type="email" autocomplete="email" required>
+      </label>
+      <label>Password
+        <input name="password" type="password" autocomplete="current-password" required minlength="8">
+      </label>
+      <p id="auth-error" class="result bad" role="alert" hidden></p>
+      <button id="auth-submit">Log in</button>
+      <p class="muted switch"><span id="auth-switch-text">New to StudyDesk?</span>
+        <button type="button" id="auth-switch" class="link plain">Create an account</button></p>
+    </form>
+  </section>
+
+  <main id="app" hidden>
     <section class="summary" aria-live="polite">
       <div class="stat"><span class="label">CGPA</span><span id="gpa" class="value">0.00</span></div>
       <div class="stat"><span class="label">Class</span><span id="class" class="value small">—</span></div>

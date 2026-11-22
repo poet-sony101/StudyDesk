@@ -1,5 +1,7 @@
 import { GRADES } from './gpa.js';
 
+export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // Each validator returns { value, errors }. `partial` allows PATCH-style updates.
 
 export function validateCourse(body = {}, { partial = false } = {}) {
@@ -49,7 +51,9 @@ export function validateTask(body = {}, { partial = false } = {}) {
     value.dueDate = due;
   }
   if (!partial || 'courseId' in body) {
-    value.courseId = body.courseId || null;
+    const courseId = body.courseId || null;
+    if (courseId && !UUID.test(courseId)) errors.push('courseId is not valid');
+    value.courseId = courseId;
   }
   if (!partial || 'done' in body) {
     value.done = Boolean(body.done);

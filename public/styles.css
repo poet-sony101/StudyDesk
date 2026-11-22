@@ -114,3 +114,22 @@ form.edit input[name="code"] { width: 110px; }
 }
 /* Don't let the edit form widen the table; just fill the cell. */
 td > form.edit { width: 0; min-width: 100%; }
+
+/* Accounts */
+[hidden] { display: none !important; }
+.account { display: flex; align-items: center; gap: 12px; }
+.account .email { color: var(--muted); font-size: 13px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.auth { display: grid; place-items: start center; padding: 48px 16px; }
+.auth form { width: 100%; max-width: 380px; display: grid; gap: 12px; }
+.auth h2 { font-size: 20px; margin: 0; }
+.auth label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.auth input { color: var(--text); font-size: 15px; padding: 9px 10px; }
+.auth button#auth-submit { padding: 10px; font-weight: 600; }
+.auth button:disabled { opacity: 0.6; cursor: wait; }
+.muted { color: var(--muted); margin: 0; font-size: 14px; }
+.switch { text-align: center; }
+button.link.plain { color: var(--accent); padding: 0 2px; font-size: 14px; }
+@media (max-width: 480px) {
+  .account .email { display: none; }
+  .account { gap: 8px; }
+}

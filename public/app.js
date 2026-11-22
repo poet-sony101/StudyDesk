@@ -10,8 +10,87 @@ async function api(path, options = {}) {
   });
   if (res.status === 204) return null;
   const data = await res.json();
+  if (res.status === 401 && !path.startsWith('/auth/')) showAuth();
   if (!res.ok) throw new Error(data.errors?.join(', ') || 'Request failed');
   return data;
+}
+
+// ---- Accounts ----
+
+let authMode = 'login';
+
+function setAuthMode(mode) {
+  authMode = mode;
+  const signup = mode === 'signup';
+  $('#auth-title').textContent = signup ? 'Create your account' : 'Log in';
+  $('#auth-intro').textContent = signup
+    ? 'Track your courses, CGPA and deadlines. Your data is private to your account.'
+    : 'Welcome back. Log in to see your courses and deadlines.';
+  $('#auth-submit').textContent = signup ? 'Create account' : 'Log in';
+  $('#auth-switch-text').textContent = signup ? 'Already have an account?' : 'New to StudyDesk?';
+  $('#auth-switch').textContent = signup ? 'Log in' : 'Create an account';
+  $('#auth-form').password.autocomplete = signup ? 'new-password' : 'current-password';
+  $('#auth-error').hidden = true;
+}
+
+function showAuth() {
+  $('#app').hidden = true;
+  $('#account').hidden = true;
+  $('#auth').hidden = false;
+  $('#auth-form').email.focus();
+}
+
+function showApp(user) {
+  $('#auth').hidden = true;
+  $('#app').hidden = false;
+  $('#account').hidden = false;
+  $('#user-email').textContent = user.email;
+}
+
+$('#auth-switch').addEventListener('click', () => setAuthMode(authMode === 'login' ? 'signup' : 'login'));
+
+$('#auth-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const button = $('#auth-submit');
+  button.disabled = true;
+  try {
+    const { user } = await api(`/auth/${authMode}`, {
+      method: 'POST', body: { email: form.email.value, password: form.password.value },
+    });
+    form.reset();
+    showApp(user);
+    await load();
+  } catch (err) {
+    const msg = err.message;
+    $('#auth-error').textContent = msg.charAt(0).toUpperCase() + msg.slice(1) + '.';
+    $('#auth-error').hidden = false;
+  } finally {
+    button.disabled = false;
+  }
+});
+
+$('#logout').addEventListener('click', async () => {
+  await api('/auth/logout', { method: 'POST' }).catch(() => {});
+  Object.assign(state, { courses: [], tasks: [], summary: null, editing: null });
+  $('#target-form').reset();
+  $('#target-result').replaceChildren(h('p', { className: 'empty' }, 'Enter the CGPA you\'re aiming for to see the grades you need.'));
+  setAuthMode('login');
+  showAuth();
+});
+
+async function start() {
+  try {
+    const { user } = await api('/auth/me');
+    showApp(user);
+    await load();
+  } catch (err) {
+    showAuth();
+    if (err.message !== 'please log in') {
+      $('#auth-error').textContent = err.message;
+      $('#auth-error').hidden = false;
+    }
+  }
 }
 
 function showError(message) {
@@ -246,4 +325,4 @@ $('#target-form').addEventListener('submit', (e) => {
 });
 $('#scale').addEventListener('change', (e) => mutate('/settings', 'PATCH', { scale: Number(e.target.value) }));
 
-load().catch((err) => showError(err.message));
+start();
